@@ -6,6 +6,11 @@ To run locally with NPM installed, use:
 
 `npm run serve`
 
+If you don't have the following dependencies installed globally, the following are required:
+
+`npm install @vue/cli-plugin-unit-jest @vue/test-utils`
+`npm install express`
+
 ..in the top-level directory, this will run the front end of the site on a free port. Paste the URL given in the command line to the search bar of a browser of your choosing. To hook up the back-end, use:
 
 `node server.js`
