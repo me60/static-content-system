@@ -70,6 +70,7 @@ export default {
           files : [],
           dirs : [],
           currentPath : '',
+          lastStatus : -1,
           PATH_SLASH : PATH_SLASH
       }
     },
@@ -77,6 +78,46 @@ export default {
         this.makeRequest('content');
     },
     methods : {
+        /* Make the request to the node endpoint with the path we have
+        appropriately set as the sole header the server uses*/
+        makeRequest : function(path) {
+            var pathToUse = this.discernPath(path);
+            fetch(this.api_url, {
+                method : 'GET',
+                headers : {
+                    Path : pathToUse
+                }
+            })
+            /* The response relies only on setting the value of dynamically
+            rendered data in the current model-view-viewmodel*/
+            .then(async response => {
+                console.log("status: " + response.status);
+                this.lastStatus = response.status;
+                if (!(response.status == 404)) {
+                    var responseData = await response.json();
+                    this.currentPath = pathToUse;
+                    this.files = responseData.files;
+                    this.content = responseData.content;
+                    this.dirs = responseData.dirs;
+                } else {
+                    this.content = "404: Not Found";
+                }
+            });
+        },
+        /* Set the request path to the parent directory, current directory,
+        and appropriate child directory respectively*/
+        discernPath : function(path) {
+            if (path == "escalate") {
+                return this.discernEscalatedDirectoryPath();
+            } else if (path == "refresh") {
+                return this.currentPath;
+            } else {
+                return this.currentPath + PATH_SLASH + path;
+            }
+        },
+        /* Re-formats the current directory path to the parent by: splitting the
+        path by its delimiter, and rebuilding it with the omission of the last
+        directory in the path*/
         discernEscalatedDirectoryPath : function() {
             let ret = '';
             let parts = this.currentPath.split(PATH_SLASH);
@@ -88,35 +129,6 @@ export default {
                 }
             }
             return ret;
-        },
-        makeRequest : function(path) {
-            var pathToUse = "";
-            /* Set the request path to the parent directory, current directory,
-            and appropriate child directory respectively*/
-            if (path == "escalate") {
-                pathToUse = this.discernEscalatedDirectoryPath();
-            } else if (path == "refresh") {
-                pathToUse = this.currentPath;
-            } else {
-                pathToUse = this.currentPath + PATH_SLASH + path;
-            }
-            /* Make the request to the node endpoint with the path we have
-            appropriately set as the sole header the server uses*/
-            fetch(this.api_url, {
-                method : 'GET',
-                headers : {
-                    Path : pathToUse
-                }
-            })
-            /* The response relies only on setting the value of dynamically
-            rendered data in the current model-view-viewmodel*/
-            .then(response => response.json())
-            .then(result => {
-               this.currentPath = pathToUse;
-               this.content = result.content;
-               this.files = result.files;
-               this.dirs = result.dirs;
-            });
         }
     }
 }
@@ -124,7 +136,7 @@ export default {
 
 <style>
 * {
-    background-color: #DAF7A6;
+    background-color: #dedb7e;
     font-family: 'Montserrat', serif;
 }
 

@@ -25,17 +25,13 @@ const app = express();
 app.use(express.static(ROOT));
 app.use(cors());
 
-// Allow cross origin requests: "Access-Control-Allow-*" for simplicity
+// We allow cross origin requests: "Access-Control-Allow-*" to avoid errors
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
     res.header('Access-Control-Allow-Methods: GET, POST, OPTIONS');
     res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
     next();
 });
-
-var corsOptions = {
-    origin: "http//localhost:8081"
-};
 
 /**
 * Supplied with a path from a request, if a file is specified, serve its
@@ -61,6 +57,14 @@ function getChildDirsAndFiles(files, dirs, path) {
     }
 }
 
+function setStatus(path, res) {
+    if (!(fs.existsSync(path))) {
+        res.status(404).end();
+    } else {
+        res.status(200);
+    }
+}
+
 /**
 * General request handler
 */
@@ -68,6 +72,7 @@ app.get('/', (req, res) => {
     var files = [];
     var dirs = [];
     var path = ROOT + req.get('Path');
+    setStatus(path, res);
     var isFile = fs.lstatSync(path).isFile();
     var content = getFileContentOrInstructions(isFile, path);
     if (!(isFile)) {
